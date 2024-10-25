@@ -99,7 +99,7 @@ function FoldBufferManager:parseBufferProviders(fb, selector)
         return
     end
     if not selector then
-        fb.providers = {'lsp', 'indent'}
+        fb.providers = {'lsp', 'treesitter', 'indent'}
         return
     end
     local res

@@ -137,8 +137,8 @@ like `set foldlevel=n` but keep `foldlevel` value.
 ### How does nvim-ufo get the folds?
 
 If ufo detect `foldmethod` option is not `diff` or `marker`, it will request the providers to get
-the folds, the request strategy is formed by the main and the fallback. The default value of main is
-`lsp` and the default value of fallback is `indent` which implemented by ufo.
+the folds, the request strategy is formed by the main and the fallbacks. The default value of main is
+`lsp` and the default fallbacks are `treesitter` and `indent` (which implemented by ufo).
 
 For example, Changing the text in a buffer will request the providers for folds.
 
