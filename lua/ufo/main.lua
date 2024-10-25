@@ -122,8 +122,8 @@ function M.inspectBuf(bufnr)
     table.insert(msg, 'Fold Status: ' .. fb.status)
     local main = fb.providers[1]
     table.insert(msg, 'Main provider: ' .. (type(main) == 'function' and 'external' or main))
-    if fb.providers[2] then
-        table.insert(msg, 'Fallback provider: ' .. fb.providers[2])
+    for i = 2, #fb.providers do
+        table.insert(msg, ('Fallback provider %d: %s'):format(i - 1, fb.providers[i]))
     end
     table.insert(msg, 'Selected provider: ' .. (fb.selectedProvider or 'nil'))
     local winid = utils.getWinByBuf(bufnr)

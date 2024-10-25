@@ -112,10 +112,6 @@ function FoldBufferManager:parseBufferProviders(fb, selector)
     elseif t == 'table' then
         res = {}
         for _, m in ipairs(providers) do
-            if #res == 2 then
-                error('Return value of `provider_selector` only supports {`main`, `fallback`} ' ..
-                    [[combo, don't add providers more than two into return table.]])
-            end
             table.insert(res, m)
         end
     else

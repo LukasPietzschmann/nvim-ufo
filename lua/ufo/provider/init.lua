@@ -25,7 +25,7 @@ end
 ---@param bufnr number
 ---@return Promise
 function Provider:requestFoldingRange(providers, bufnr)
-    local main, fallback = providers[1], providers[2]
+    local main = providers[1]
     local mainFunc = self:getFunction(main)
 
     local s
@@ -38,11 +38,12 @@ function Provider:requestFoldingRange(providers, bufnr)
         return {main, value}
     end, function(reason)
         if needFallback(reason) then
-            local fallbackFunc = self:getFunction(fallback)
-            if fallbackFunc then
-                return {fallback, fallbackFunc(bufnr)}
-            else
+            local fallbacks = {table.unpack(providers, 2)}
+            if #fallbacks == 0 then
+                vim.notify('No provider had fold ranges', 'warn', {title = 'UFO'})
                 return {main, nil}
+            else
+                return Provider:requestFoldingRange(fallbacks, bufnr)
             end
         else
             return promise.reject(reason)
