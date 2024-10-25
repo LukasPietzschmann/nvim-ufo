@@ -101,7 +101,15 @@ require('ufo').setup({
 })
 --
 
--- Option 4: disable all providers for all buffers
+-- Option 4: multiple fallback providers
+require('ufo').setup({
+    provider_selector = function(bufnr, filetype, buftype)
+        return {'lsp', 'treesitter', 'indent'}
+    end
+})
+--
+
+-- Option 5: disable all providers for all buffers
 -- Not recommend, AFAIK, the ufo's providers are the best performance in Neovim
 require('ufo').setup({
     provider_selector = function(bufnr, filetype, buftype)
@@ -147,7 +155,7 @@ For example, Changing the text in a buffer will request the providers for folds.
     },
     provider_selector = {
         description = [[A function as a selector for fold providers. For now, there are
-                    'lsp' and 'treesitter' as main provider, 'indent' as fallback provider]],
+                    'lsp', 'treesitter', and 'indent' as providers]],
         default = nil
     },
     close_fold_kinds_for_ft = {
