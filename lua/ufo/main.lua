@@ -49,7 +49,6 @@ local function createEvents()
         group = gid,
         pattern = {'buftype', 'filetype', 'syntax', 'diff'},
         callback = function(ev)
-            local bufnr = api.nvim_get_current_buf()
             local match = ev.match
             local e
             if match == 'buftype' then
@@ -64,7 +63,7 @@ local function createEvents()
             else
                 error([[Didn't match any events!]])
             end
-            event:emit(e, bufnr, vim.v.option_new, vim.v.option_old)
+            event:emit(e, ev.buf, vim.v.option_new, vim.v.option_old)
         end
     })
     return disposable:create(function()
@@ -119,6 +118,11 @@ function M.inspectBuf(bufnr)
     end
     local msg = {}
     table.insert(msg, 'Buffer: ' .. bufnr)
+    local winid = utils.getWinByBuf(bufnr)
+    if utils.isDiffOrMarkerFold(winid) then
+        table.insert(msg, 'Fold method: ' .. vim.wo[winid].foldmethod)
+        return msg
+    end
     table.insert(msg, 'Fold Status: ' .. fb.status)
     local main = fb.providers[1]
     table.insert(msg, 'Main provider: ' .. (type(main) == 'function' and 'external' or main))
@@ -126,7 +130,6 @@ function M.inspectBuf(bufnr)
         table.insert(msg, ('Fallback provider %d: %s'):format(i - 1, fb.providers[i]))
     end
     table.insert(msg, 'Selected provider: ' .. (fb.selectedProvider or 'nil'))
-    local winid = utils.getWinByBuf(bufnr)
     local curKind
     local curStartLine, curEndLine = 0, 0
     local kindSet = {}

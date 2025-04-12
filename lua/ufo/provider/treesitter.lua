@@ -1,5 +1,6 @@
 local bufmanager = require('ufo.bufmanager')
 local foldingrange = require('ufo.model.foldingrange')
+local utils = require('ufo.utils')
 
 ---@class UfoTreesitterProvider
 ---@field hasProviders table<string, boolean>
@@ -30,15 +31,20 @@ end
 local MetaNode = {}
 MetaNode.__index = MetaNode
 
-function MetaNode:new(range)
+function MetaNode:new(range, type)
     local o = self == MetaNode and setmetatable({}, self) or self
-    o.value = range
+    o._range = range
+    o._type = type
     return o
 end
 
 function MetaNode:range()
-    local range = self.value
+    local range = self._range
     return range[1], range[2], range[3], range[4]
+end
+
+function MetaNode:type()
+    return self._type
 end
 
 --- Return a meta node that represents a range between two nodes, i.e., (#make-range!),
@@ -90,7 +96,7 @@ local function iterFoldMatches(bufnr, parser, root, rootLang)
         return function() end
     end
     ---@diagnostic disable-next-line: need-check-nil
-    local iter = q:iter_matches(p.root, p.source, p.start, p.stop, { all = false })
+    local iter = q:iter_matches(p.root, p.source, p.start, p.stop)
     return function()
         local pattern, match, metadata = iter()
         local matches = {}
@@ -99,11 +105,25 @@ local function iterFoldMatches(bufnr, parser, root, rootLang)
         end
 
         -- Extract capture names from each match
-        for id, node in pairs(match) do
+        for id, nodes in pairs(match) do
             local m = metadata[id]
             if m and m.range then
-                node = MetaNode:new(m.range)
+                local type
+                if utils.has11() then
+                    type = nodes[1].type and nodes[1]:type() or nil
+                else
+                    type = nodes.type and nodes:type() or nil
+                end
+                node = MetaNode:new(m.range, type)
+            elseif type(nodes) ~= "table" then
+                -- old behaviou before 0.11
+                node = nodes
+            elseif #nodes == 1 then
+                node = nodes[1]
+            else
+                node = MetaNode.from_nodes(nodes[1], nodes[#nodes])
             end
+
             table.insert(matches, node)
         end
 
@@ -165,6 +185,9 @@ function Treesitter.getFolds(bufnr)
     if not parser then
         self.hasProviders[ft] = false
         error('UfoFallbackException')
+    end
+    if utils.has11() then
+        parser:parse()
     end
 
     local ranges = {}
